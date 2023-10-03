@@ -2,8 +2,9 @@ const express = require("express");
 
 const router = express.Router();
 const User = require("../models/user");
-const multer = require("multer");
-
+// const multer = require("multer");
+const {signup, login} = require("../controllers/userControllers");
+const jwtAuth = require("../middlewares/auth");
 // image upload
 
 // let storage = multer.diskStorage({
@@ -23,8 +24,9 @@ router.get("/", (req, res) => {
   res.send("hello Users!");
 });
 
-router.post("/signup", (req, res) => {
-       console.log("req.body");
-})
+router.post("/signup", signup);
+router.post("/login",jwtAuth,login)
+
+
 
 module.exports = router;

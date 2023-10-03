@@ -13,18 +13,25 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   phone: {
-    type: String,
+    type: Number,
     required: true,
   },
   image: {
     type: String,
     required: true,
   },
-  created: {
-    type: Date,
-    required: true,
-    default: Date.now(),
+  address:{
+    type:String,
+    required:false
   },
-});
+  isAdmin:{
+    type:Boolean,
+    required:false,
+    default:false
+  },
+},
+  {timestamps:true}
+);
 
-module.exports = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+module.exports = User;
