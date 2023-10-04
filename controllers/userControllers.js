@@ -1,6 +1,6 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 
 module.exports.signup = async (req, res) => {
   try {
@@ -32,34 +32,59 @@ module.exports.signup = async (req, res) => {
 };
 
 module.exports.login = async (req, res) => {
-
   try {
     const email = req.body.email;
     const password = req.body.password;
     const user = await User.findOne({ email });
-    
 
     if (!user) {
-      return res.status(401).send("Invalid Credentials")
+      return res.status(401).send("Invalid Credentials");
     }
     const isMatch = await bcrypt.compare(password, user.password);
-    if(!isMatch){
-      return res.status(401).send("invalid Cred")
+    if (!isMatch) {
+      return res.status(401).send("invalid Cred");
     }
     const jwtKey = process.env.JWT_SECRET;
     delete user.password;
-    const token = jwt.sign(user.toObject(),jwtKey,{expiresIn:"2d"});
+    const token = jwt.sign(user.toObject(), jwtKey, { expiresIn: "2d" });
     return res.status(200).send(token);
-  }
-  catch (error) {
+  } catch (error) {
     console.log(error);
-    return res.status(500).end("Internal Server Error bye bye")
+    return res.status(500).end("Internal Server Error bye bye");
   }
+};
 
+module.exports.updateUser = async (req, res) => {
+  try {
+    const email = req.user.email;
+    const updatedUserData = req.body;
+    console.log(email);
+
+    const user = await User.findOneAndUpdate({email},updatedUserData);
+    if (!user) {
+      console.log("Error finding the user");
+    }
+    return res.status(200).send("user updated successfully");
+  } 
+  catch (err) {
+    console.log("error", err);
+    return res.status(500).end("Internal Server Error");
+  }
+};
+
+
+module.exports.getAllUsers = async(req,res)=>{
+      try{
+        // const users = await User.find();
+        const users = await User.find({}, { password: 0 });
+        delete users.password
+        if(!users){
+          return res.status(404).send("No users found")
+        }
+        return res.status(200).json(users);
+      }
+      catch(err){
+        console.error("Error fetching users:",err)
+        return res.status(500).end("Internal Server Error")
+      }
 }
-
-
-
-
-
-

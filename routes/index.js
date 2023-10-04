@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 // const multer = require("multer");
-const {signup, login} = require("../controllers/userControllers");
+const {signup, login, updateUser, getAllUsers} = require("../controllers/userControllers");
 const jwtAuth = require("../middlewares/auth");
 // image upload
 
@@ -25,7 +25,9 @@ router.get("/", (req, res) => {
 });
 
 router.post("/signup", signup);
-router.post("/login",jwtAuth,login)
+router.post("/login",login)
+router.put("/update",jwtAuth,updateUser)
+router.get("/allUsers",getAllUsers)
 
 
 
