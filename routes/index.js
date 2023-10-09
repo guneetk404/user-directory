@@ -8,6 +8,7 @@ const {
   login,
   updateUser,
   userFetcher,
+  googleLogin,
 } = require("../controllers/userControllers");
 const jwtAuth = require("../middlewares/auth");
 const { getAllUsers, deleteUser , updateUsers } = require("../controllers/adminControllers");
@@ -39,5 +40,9 @@ router.put("/adminUpdate", jwtAuth, updateUsers);
 router.get("/allUsers", jwtAuth, getAllUsers);
 router.get("/user/:id", jwtAuth, userFetcher);
 router.delete("/delete", jwtAuth, deleteUser);
+
+
+
+router.post("/google-login",googleLogin)
 
 module.exports = router; 

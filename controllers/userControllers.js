@@ -110,3 +110,50 @@ module.exports.userFetcher = async (req, res) => {
     });
   }
 };
+
+
+
+module.exports.googleLogin = async (req, res) => {
+  try {
+    console.log(req.body.data.email);
+    const email = req.body.email;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).send({
+        message:"sorry Wrong Credentials"
+
+      });
+    }
+
+    const accessToken = req.body.data.accessToken;
+    const clientId = req.body.data.clientId;
+    const googleResponse = await axios.get(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${accessToken}`)
+    console.log(googleResponse);
+    if (googleResponse.data.aud === clientId) {
+      // Token is valid, you can trust it.
+      // You can access user information from googleResponse.data.
+      // Perform the necessary actions or grant access based on your application's requirements.
+      console.log("done");
+      res.status(200).json({ message: 'Authentication successful' });
+    } else {
+      // The token is not valid or doesn't belong to your app.
+      console.log("not done")
+      res.status(401).json({ message: 'Invalid access token' });
+    }
+    const jwtKey = process.env.JWT_SECRET;
+    delete user.password;
+    const userEmail= user.toObject().email
+    const token = jwt.sign({userEmail}, jwtKey, { expiresIn: "2d" });
+    // console.log(token);
+    res.status(200).send({
+      email: user.email,
+      name: user.name,
+      token: token,
+      message: "You have been successfully logged in",
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).end("Internal Server Error bye bye");
+  }
+};
