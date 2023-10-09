@@ -17,7 +17,7 @@ module.exports.signup = async (req, res) => {
         success: true,
       });
     } else {
-      return res.json(500, {
+      return res.json(202, {
         message: "User Already Present!",
         success: false,
       });
@@ -38,16 +38,29 @@ module.exports.login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(401).send("Invalid Credentials");
+      return res.status(401).send({
+        message:"sorry Wrong Credentials"
+
+      });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).send("invalid Cred");
+      return res.status(401).send({
+        message:"sorry Wrong Credentials"
+      });
     }
     const jwtKey = process.env.JWT_SECRET;
     delete user.password;
-    const token = jwt.sign(user.toObject(), jwtKey, { expiresIn: "2d" });
-    return res.status(200).send(token);
+    const userEmail= user.toObject().email
+    const token = jwt.sign({userEmail}, jwtKey, { expiresIn: "2d" });
+    // console.log(token);
+    res.status(200).send({
+      email: user.email,
+      name: user.name,
+      token: token,
+      message: "You have been successfully logged in",
+      success: true,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).end("Internal Server Error bye bye");
@@ -56,15 +69,21 @@ module.exports.login = async (req, res) => {
 
 module.exports.updateUser = async (req, res) => {
   try {
-    const email = req.user.email;
+    const email = req.body.email;
+    console.log("email inside update",email)
     const updatedUserData = req.body;
-    console.log(email);
-
-    const user = await User.findOneAndUpdate({email},updatedUserData);
-    if (!user) {
-      console.log("Error finding the user");
+    console.log(req.body);
+    console.log(req.tokendata);
+    if(email===req.tokendata.userEmail){ 
+      const user = await User.findOneAndUpdate({email},updatedUserData);
+      if (!user) {
+        console.log("Error finding the user");
+      }
+      return res.status(200).send("user updated successfully");
+    }else{
+      return res.status(401).end("Unauthorized Access");  
     }
-    return res.status(200).send("user updated successfully");
+    
   } 
   catch (err) {
     console.log("error", err);
@@ -72,4 +91,22 @@ module.exports.updateUser = async (req, res) => {
   }
 };
 
-
+module.exports.userFetcher = async (req, res) => {
+  try {
+    const email =req.params.id
+    const results =   await User.findOne({ email }, { password: 0 });
+    console.log("trying")
+    console.log("userFetcher",results)
+    delete results.password
+    return res.status(200).json({
+      message: "Success",
+      body: results,
+      success: true,
+    });
+  } catch (error) {
+    return res.json(400, {
+      message: error,
+      success: false,
+    });
+  }
+};

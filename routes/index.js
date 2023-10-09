@@ -3,9 +3,14 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 // const multer = require("multer");
-const {signup, login, updateUser, } = require("../controllers/userControllers");
+const {
+  signup,
+  login,
+  updateUser,
+  userFetcher,
+} = require("../controllers/userControllers");
 const jwtAuth = require("../middlewares/auth");
-const { getAllUsers, deleteUser } = require("../controllers/adminControllers");
+const { getAllUsers, deleteUser , updateUsers } = require("../controllers/adminControllers");
 // image upload
 
 // let storage = multer.diskStorage({
@@ -26,10 +31,13 @@ router.get("/", (req, res) => {
 });
 
 router.post("/signup", signup);
-router.post("/login",login)
-router.put("/update",jwtAuth,updateUser)
-router.get("/allUsers",jwtAuth,getAllUsers)
-router.delete("/delete",deleteUser)
+router.post("/login", login);
+router.put("/update", jwtAuth, updateUser);
 
+router.put("/adminUpdate", jwtAuth, updateUsers);
 
-module.exports = router;
+router.get("/allUsers", jwtAuth, getAllUsers);
+router.get("/user/:id", jwtAuth, userFetcher);
+router.delete("/delete", jwtAuth, deleteUser);
+
+module.exports = router; 
