@@ -33,6 +33,7 @@ router.get("/", (req, res) => {
 
 router.post("/signup", signup);
 router.post("/login", login);
+router.post("/google-login",googleLogin)
 router.put("/update", jwtAuth, updateUser);
 
 router.put("/adminUpdate", jwtAuth, updateUsers);
@@ -43,6 +44,5 @@ router.delete("/delete", jwtAuth, deleteUser);
 
 
 
-router.post("/google-login",googleLogin)
 
 module.exports = router; 
