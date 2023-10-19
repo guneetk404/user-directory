@@ -2,6 +2,8 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
+const { sendOtp } = require("../config/nodeMailer");
+
 module.exports.signup = async (req, res) => {
   try {
     console.log(req.body);
@@ -57,6 +59,7 @@ module.exports.login = async (req, res) => {
       email: user.email,
       name: user.name,
       token: token,
+      admin: user.isAdmin,
       message: "You have been successfully logged in",
       success: true,
     });
@@ -71,14 +74,24 @@ module.exports.updateUser = async (req, res) => {
     const email = req.body.email;
     console.log("email inside update", email);
     const updatedUserData = req.body;
-    console.log(req.body);
-    console.log(req.tokendata);
-    if (email === req.tokendata.userEmail) {
+    const tokenEmail = req.tokendata.userEmail;
+    console.log("tokenEmail", req.tokendata.userEmail);
+    const admin = await User.findOne({ email: tokenEmail });
+    console.log(admin);
+    // console.log(req.tokendata);
+    if (email === tokenEmail || admin.isAdmin) {
       const user = await User.findOneAndUpdate({ email }, updatedUserData);
+      // const user1 = await User.findOne({email});
+
+     const data = await user.save();
       if (!user) {
         console.log("Error finding the user");
       }
-      return res.status(200).send("user updated successfully");
+      return res.status(200).json({
+        user:data,
+        message: "user data updated Successfully",
+        success: true,
+      });
     } else {
       return res.status(401).end("Unauthorized Access");
     }
@@ -146,5 +159,61 @@ module.exports.googleLogin = async (req, res) => {
   } catch (error) {
     //console.log(error);
     return res.status(500).end("Internal Server Error bye bye");
+  }
+};
+
+module.exports.resetPassword = async (req, res) => {
+  try {
+    const email = req.body?.email;
+    console.log(req.body.email);
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    console.log(otp);
+    const user = await User.findOneAndUpdate({ email }, { otp: otp });
+    console.log(user);
+    await sendOtp(email, otp);
+    res.status(200).send({
+      email: email,
+      message: "otp sent",
+      success: true,
+    });
+  } catch (error) {
+    return res.json(500, {
+      message: "Some error in sending OTP",
+      success: false,
+      error: error,
+    });
+  }
+};
+
+module.exports.validatePassword = async (req, res) => {
+  try {
+    console.log(req.body);
+    const email = req.body.email;
+    const password = req.body.password;
+    const hashPassword = bcrypt.hashSync(password, 8);
+
+    const otp = req.body.otp;
+    const user = await User.findOne({ email });
+    console.log(user.otp);
+    console.log(req.body.otp);
+    console.log(user.otp == otp);
+    if (user.otp == otp) {
+      const user = await User.findOneAndUpdate(
+        { email },
+        { otp: null, password: hashPassword }
+      );
+      console.log(user);
+      return res.status(200).send({
+        message: "Password reset successfully",
+        success: true,
+      });
+    } else {
+      return res.status(402).send({
+        message: "please enter a valid otp",
+        success: false,
+      });
+    }
+  } catch (err) {
+    return res.status(500).end("Internal Server Error");
   }
 };

@@ -27,11 +27,16 @@ module.exports.getAllUsers = async (req, res) => {
 
 module.exports.deleteUser = async (req, res) => {
   try {
-    const email = req.body.email;
-    const user = await User.findOneAndDelete({ email });
+    const mail = req.tokendata.userEmail;
+    const admin =  await User.findOne({ email: mail });
+    if(admin.isAdmin){  
 
-    if (!user) {
-      return res.status(404).send("user not found");
+      const email = req.params.email;
+      const user = await User.findOneAndDelete({ email });
+      
+      if (!user) {
+        return res.status(404).send("user not found");
+      }
     }
     return res.status(200).send("User deleted Successfully");
   } catch (error) {
@@ -46,10 +51,10 @@ module.exports.updateUsers = async (req, res) => {
     const user = await User.findOne({ email: mail });
 
     const email = req.body.email;
-    // console.log("email inside update",email)
+    console.log("email inside update",email)
     const updatedUserData = req.body;
     // console.log(req.body);
-    // console.log(user.isAdmin)
+    console.log(user.isAdmin)
     // console.log(req.tokendata.userEmail);
     if (user.isAdmin) {
       const updateUser = await User.findOneAndUpdate(
